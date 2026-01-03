@@ -393,17 +393,29 @@ func readWAV(r io.Reader, expectedChannels int) (*AudioData, error) {
 
 			switch fmtChunk.audioFormat {
 			case 1: // PCM
-				if fmtChunk.bitsPerSample != 16 {
-					return nil, fmt.Errorf("unsupported PCM bit depth %d", fmtChunk.bitsPerSample)
-				}
-				for i := 0; i < numFrames; i++ {
-					for ch := 0; ch < expectedChannels; ch++ {
-						var v int16
-						if err := binary.Read(br, binary.LittleEndian, &v); err != nil {
-							return nil, fmt.Errorf("read PCM16 sample: %w", err)
+				switch fmtChunk.bitsPerSample {
+				case 16:
+					for i := 0; i < numFrames; i++ {
+						for ch := 0; ch < expectedChannels; ch++ {
+							var v int16
+							if err := binary.Read(br, binary.LittleEndian, &v); err != nil {
+								return nil, fmt.Errorf("read PCM16 sample: %w", err)
+							}
+							samplesByChannel[ch][i] = float64(v) / 32768.0
 						}
-						samplesByChannel[ch][i] = float64(v) / 32768.0
 					}
+				case 24:
+					for i := 0; i < numFrames; i++ {
+						for ch := 0; ch < expectedChannels; ch++ {
+							v, err := readPCM24Sample(br)
+							if err != nil {
+								return nil, fmt.Errorf("read PCM24 sample: %w", err)
+							}
+							samplesByChannel[ch][i] = float64(v) / 8388608.0
+						}
+					}
+				default:
+					return nil, fmt.Errorf("unsupported PCM bit depth %d", fmtChunk.bitsPerSample)
 				}
 
 			case 3: // IEEE float
@@ -473,4 +485,16 @@ func floatToPCM16(v float64) int16 {
 		return -32768
 	}
 	return int16(math.Round(v * 32767.0))
+}
+
+func readPCM24Sample(r io.Reader) (int32, error) {
+	var b [3]byte
+	if _, err := io.ReadFull(r, b[:]); err != nil {
+		return 0, err
+	}
+	v := int32(b[0]) | int32(b[1])<<8 | int32(b[2])<<16
+	if v&0x800000 != 0 {
+		v |= ^0xffffff
+	}
+	return v, nil
 }
