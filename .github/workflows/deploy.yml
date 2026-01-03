@@ -31,7 +31,7 @@ jobs:
 
       - name: Build wasm
         run: |
-          cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" web/
+          if [ -f "$(go env GOROOT)/misc/wasm/wasm_exec.js" ]; then cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" web/; else cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/; fi
           GOOS=js GOARCH=wasm go build -o web/sqdecoder.wasm .
 
       - name: Upload artifact

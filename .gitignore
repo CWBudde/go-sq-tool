@@ -20,6 +20,8 @@ vendor/
 # Build output
 go-sq-tool
 /go-sq-tool
+web/wasm_exec.js
+web/*.wasm
 
 # IDE
 .idea/

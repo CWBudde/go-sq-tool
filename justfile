@@ -37,8 +37,8 @@ clean:
 
 # Build and serve the WASM demo
 web-demo:
-    cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" web/
-    GOOS=js GOARCH=wasm go build -o web/sqdecoder.wasm .
+    if [ -f "$(go env GOROOT)/misc/wasm/wasm_exec.js" ]; then cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" web/; else cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/; fi
+    GOOS=js GOARCH=wasm go build -buildvcs=false -o web/sqdecoder.wasm .
     python3 -m http.server --directory web 8080
 
 # Run all checks (test, lint, coverage)
