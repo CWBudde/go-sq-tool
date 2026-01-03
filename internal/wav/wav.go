@@ -395,8 +395,8 @@ func readWAV(r io.Reader, expectedChannels int) (*AudioData, error) {
 			case 1: // PCM
 				switch fmtChunk.bitsPerSample {
 				case 16:
-					for i := 0; i < numFrames; i++ {
-						for ch := 0; ch < expectedChannels; ch++ {
+					for i := range numFrames {
+						for ch := range expectedChannels {
 							var v int16
 							if err := binary.Read(br, binary.LittleEndian, &v); err != nil {
 								return nil, fmt.Errorf("read PCM16 sample: %w", err)
@@ -405,8 +405,8 @@ func readWAV(r io.Reader, expectedChannels int) (*AudioData, error) {
 						}
 					}
 				case 24:
-					for i := 0; i < numFrames; i++ {
-						for ch := 0; ch < expectedChannels; ch++ {
+					for i := range numFrames {
+						for ch := range expectedChannels {
 							v, err := readPCM24Sample(br)
 							if err != nil {
 								return nil, fmt.Errorf("read PCM24 sample: %w", err)
